@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Scanner;
 
 public class LocationHandler {
@@ -42,7 +39,7 @@ public class LocationHandler {
                     //TODO: check each data field before creating the location object
                     Location newLocation = new Location(name, latitude, longitude, demandCoefficient);
                     flightScheduler.getLocationList().add(newLocation);
-                    flightScheduler.getLocationMap().put(name.toUpperCase(), newLocation);
+                    flightScheduler.getLocationMap().put(newLocation.getUppercaseName(), newLocation);
                     importCnt++;
                 }
             }
@@ -109,5 +106,18 @@ public class LocationHandler {
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    /**
+     * view details about a location (it’s name, coordinates, demand coefficient)
+     * @param name location name input
+     * @param flightScheduler flight scheduler object
+     */
+    public static void handleViewSingleLocation(String name, FlightScheduler flightScheduler) {
+        Location location = flightScheduler.getLocationMap().get(name.toUpperCase());
+        System.out.printf("%-14s%s\n", "Location:", location.getName());
+        System.out.printf("%-14s%s\n", "Latitude:", location.getLatitude());
+        System.out.printf("%-14s%s\n", "Longitude:", location.getLongitude());
+        System.out.printf("%-14s%s\n", "Demand:", (location.getDemandCoefficient() >= 0 ? "+" : "") + location.getDemandCoefficient());
     }
 }

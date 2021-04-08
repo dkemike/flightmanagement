@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Location {
     String name;
+    String uppercaseName;
     double latitude;
     double longitude;
     double demandCoefficient;
@@ -13,6 +14,7 @@ public class Location {
 
     public Location(String name, double latitude, double longitude, double demandCoefficient) {
         this.name = name;
+        this.uppercaseName = name.toUpperCase();
         this.latitude = latitude;
         this.longitude = longitude;
         this.demandCoefficient = demandCoefficient;
@@ -64,6 +66,14 @@ public class Location {
 
     public void setDemandCoefficient(double demandCoefficient) {
         this.demandCoefficient = demandCoefficient;
+    }
+
+    public String getUppercaseName() {
+        return uppercaseName;
+    }
+
+    public void setUppercaseName(String uppercaseName) {
+        this.uppercaseName = uppercaseName;
     }
 
     @Override

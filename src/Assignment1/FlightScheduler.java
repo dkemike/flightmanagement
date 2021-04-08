@@ -107,7 +107,10 @@ public class FlightScheduler {
                             System.out.println("Invalid location name.");
                             break;
                         }
-
+                        if (args.length == 2) { // LOCATION <name>
+                            LocationHandler.handleViewSingleLocation(args[1], this);
+                        }
+                        break;
                 }
                 break;
             case UserCommand.LOCATIONS:
