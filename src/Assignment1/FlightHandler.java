@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class FlightHandler {
@@ -23,6 +24,66 @@ public class FlightHandler {
         dayToNumber.put("Fri", 5);
         dayToNumber.put("Sat", 6);
         dayToNumber.put("Sun", 7);
+    }
+
+    /**
+     * add a new flight to the flight scheduler system
+     * need to check whether the user input flight data is valid
+     * @cmd FLIGHT ADD <departure time> <from> <to> <capacity>
+     * @param args array of user input arguments to create a new flight
+     * @param flightScheduler flight scheduler object
+     * @param showAddResult whether display add flight result on the screen
+     * @return flight add success or failure
+     */
+    public static boolean handleAddFlight(String[] args, FlightScheduler flightScheduler, boolean showAddResult) {
+        try {
+            if (args.length < 7) throw new IllegalArgumentException(SystemMessage.FLIGHT_ADD_CMD_USAGE);
+
+            //check day time format
+            String departureDayTime = args[2] + " " + args[3];
+            try {
+                Utility.longDayTimeFormatter.parse(departureDayTime);
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Invalid departure time. Use the format <day_of_week> <hour:minute>, with 24h time.");
+            }
+
+            //check start location
+            String startLocation = args[4];
+            if (!flightScheduler.getLocationMap().containsKey(startLocation.toUpperCase())) throw new IllegalArgumentException("Invalid starting location.");
+
+            //check end location
+            String endLocation = args[5];
+            if (!flightScheduler.getLocationMap().containsKey(endLocation.toUpperCase())) throw new IllegalArgumentException("Invalid starting location.");
+
+            //check start and end locations are same
+            if (startLocation.equalsIgnoreCase(endLocation)) throw new IllegalArgumentException("Source and destination cannot be the same place.");
+
+            //TODO: check scheduling
+
+            //check capacity
+            if ((!Utility.isNumeric(args[6]) || Integer.parseInt(args[6]) <= 0)) throw new IllegalArgumentException("Invalid positive integer capacity.");
+            int capacity = Integer.parseInt(args[6]);
+
+            //add number of book if has one
+            int numOfBook = 0;
+            if (args.length == 8) {
+                if ((!Utility.isNumeric(args[7]) || Integer.parseInt(args[7]) < 0)) throw new IllegalArgumentException("Invalid number of passenger book.");
+                numOfBook = Integer.parseInt(args[7]);
+            }
+
+            int id = flightScheduler.getFlightList().size();
+            Flight newFlight = new Flight(id, departureDayTime, startLocation, endLocation, capacity, numOfBook);
+            flightScheduler.getFlightList().add(newFlight);
+            flightScheduler.getFlightMap().put(id, newFlight);
+
+            if (showAddResult) System.out.println("Successfully added Flight " + id + ".");
+
+        } catch(IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -49,17 +110,9 @@ public class FlightHandler {
                 if (dataFields.length < 5) {
                     invalidCnt++;
                 } else {
-                    String departureDayTime = dataFields[0];
-                    int id = flightScheduler.getFlightList().size();
-                    String startLocation = dataFields[1];
-                    String endLocation = dataFields[2];
-                    int capacity = Integer.valueOf(dataFields[3]);
-                    int numOfBook = Integer.valueOf(dataFields[4]);
-                    //TODO: check each data field before creating the flight object
-                    Flight newFlight = new Flight(id, departureDayTime, startLocation, endLocation, capacity, numOfBook);
-                    flightScheduler.getFlightList().add(newFlight);
-                    flightScheduler.getFlightMap().put(id, newFlight);
-                    importCnt++;
+                    String[] flightArgs = {"", "", dataFields[0].split(" ")[0], dataFields[0].split(" ")[1], dataFields[1], dataFields[2], dataFields[3], dataFields[4]};
+                    if (handleAddFlight(flightArgs, flightScheduler, false)) importCnt++;
+                    else invalidCnt++;
                 }
             }
 
@@ -72,7 +125,7 @@ public class FlightHandler {
             System.out.println(importResult);
             fileReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error reading file.");
         }
     }
 
@@ -98,7 +151,7 @@ public class FlightHandler {
             System.out.println("Export " + numOfFlight + " of " + (numOfFlight > 1 ? "flights." : "flight."));
             fileWriter.close();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error writing file.");
         }
     }
 
@@ -111,8 +164,13 @@ public class FlightHandler {
     public static void handleListAllFlights(String[] args, FlightScheduler flightScheduler) {
         try {
             if (args.length > 1) throw new IllegalArgumentException(SystemMessage.GENERAL_INVALID_MSG);
+            //print the headers
+            System.out.println("Flights");
+            System.out.println("-------------------------------------------------------");
+            System.out.printf("%-4s%-14s%-14s%s\n", "ID", "Departure", "Arrival", "Source --> Destination");
+            System.out.println("-------------------------------------------------------");
             if (flightScheduler.getFlightList().size() == 0) {
-                System.out.println("No flights are available");
+                System.out.println("(None)");
                 return;
             }
 
@@ -121,10 +179,10 @@ public class FlightHandler {
                 // sort according to day first, then time
                 if (!f1.getDepartureDayTime().equals(f2.getDepartureDayTime())) {
                     if (f1.getDepartureDay().equals(f2.getDepartureDay())) {
-                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+                        SimpleDateFormat tempFormatter = new SimpleDateFormat("HH:mm");
                         try {
-                            Date d1 = sdf.parse(f1.getDepartureTime());
-                            Date d2 = sdf.parse(f2.getDepartureTime());
+                            Date d1 = tempFormatter.parse(f1.getDepartureTime());
+                            Date d2 = tempFormatter.parse(f2.getDepartureTime());
                             return (int) (d1.getTime() - d2.getTime());
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -138,10 +196,6 @@ public class FlightHandler {
             });
 
             //print out flight information
-            System.out.println("Flights");
-            System.out.println("-------------------------------------------------------");
-            System.out.printf("%-4s%-14s%-14s%s\n", "ID", "Departure", "Arrival", "Source --> Destination");
-            System.out.println("-------------------------------------------------------");
             for (Flight flight: flightScheduler.getFlightList()) {
                 System.out.printf("%-4s%-14s%-14s%s\n", flight.getId(), flight.getDepartureDay() + " " + flight.getDepartureTime(), flight.getArriveDay() + " " + flight.getDepartureTime(), flight.getStartLocation() + " --> " + flight.getEndLocation());
             }
@@ -169,7 +223,5 @@ public class FlightHandler {
         System.out.printf("%-14s%s\n", "Ticket Cost:", "$" + flight.getPrice());
         System.out.printf("%-14s%s\n", "Passengers:", flight.getNumOfBook() + "/" + flight.getCapacity());
     }
-
-
 
 }

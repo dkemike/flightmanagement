@@ -8,9 +8,56 @@ import java.util.Collections;
 import java.util.Scanner;
 
 public class LocationHandler {
+
+    /**
+     * add a new location to the flight scheduler system
+     * need to check whether the user input location data is valid
+     * @cmd LOCATION ADD <name> <lat> <long> <demand_coefficient>
+     * @param args array of user input arguments to create a new location
+     * @param flightScheduler flight scheduler object
+     * @param showAddResult whether display add location result on the screen
+     * @return location add success or failure
+     */
+    public static boolean handleAddLocation(String[] args, FlightScheduler flightScheduler, boolean showAddResult) {
+        try {
+            //check argument length
+            if (args.length < 6) throw new IllegalArgumentException(SystemMessage.LOCATION_ADD_CMD_USAGE);
+
+            //check location name
+            String name = args[2];
+            if (flightScheduler.getLocationMap().containsKey(name.toUpperCase())) throw new IllegalArgumentException("This location already exists.");
+
+            //check latitude
+            if (!Utility.isNumeric(args[3]) || Double.parseDouble(args[3]) < -85 || Double.parseDouble(args[3]) > 85) throw new IllegalArgumentException("Invalid latitude. It must be a number of degrees between -85 and +85.");
+            double latitude = Double.parseDouble(args[3]);
+
+            //check longitude
+            if (!Utility.isNumeric(args[4]) || Double.parseDouble(args[4]) < -180 || Double.parseDouble(args[4]) > 180) throw new IllegalArgumentException("Invalid longitude. It must be a number of degrees between -180 and +180.");
+            double longitude = Double.parseDouble(args[4]);
+
+            //check demand coefficient
+            if (!Utility.isNumeric(args[5]) || Double.parseDouble(args[5]) < -1 || Double.parseDouble(args[5]) > 1) throw new IllegalArgumentException("Invalid demand coefficient. It must be a number between -1 and +1.");
+            double demandCoefficient = Double.parseDouble(args[5]);
+
+            //add new location to the system
+            Location newLocation = new Location(name, latitude, longitude, demandCoefficient);
+            flightScheduler.getLocationList().add(newLocation);
+            flightScheduler.getLocationMap().put(newLocation.getUppercaseName(), newLocation);
+            if (showAddResult) System.out.println("Successfully added location " + name);
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Import location CSV file
      * CSV Format: locationName,latitude,longitude,demandCoefficient
+     * @cmd LOCATION IMPORT <filename>
+     * @param args array of user input arguments for import a location csv file
      * @param flightScheduler flight scheduler object
      * @return number of imports and invalid row
      * @FileNotFoundException no filename is given, or the file doesn’t exist.
@@ -31,16 +78,9 @@ public class LocationHandler {
                 if (dataFields.length < 4) {
                     invalidCnt++;
                 } else {
-                    String name = dataFields[0];
-                    double latitude = Double.parseDouble(dataFields[1]);
-                    double longitude = Double.parseDouble(dataFields[2]);
-                    double demandCoefficient = Double.parseDouble(dataFields[3]);
-
-                    //TODO: check each data field before creating the location object
-                    Location newLocation = new Location(name, latitude, longitude, demandCoefficient);
-                    flightScheduler.getLocationList().add(newLocation);
-                    flightScheduler.getLocationMap().put(newLocation.getUppercaseName(), newLocation);
-                    importCnt++;
+                    String[] locationArgs = {"", "", dataFields[0], dataFields[1], dataFields[2], dataFields[3]};
+                    if (handleAddLocation(locationArgs, flightScheduler, false)) importCnt++;
+                    else invalidCnt++;
                 }
             }
 
@@ -53,14 +93,15 @@ public class LocationHandler {
             System.out.println(importResult);
             fileReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error reading file.");
         }
     }
 
     /**
      * export locations information as CSV file
      * Export should write to the file location based on the location name
-     * @param args array of user input arguments
+     * @cmd LOCATION EXPORT <filename>
+     * @param args array of user input arguments to expoer a location csv file
      * @param flightScheduler flight scheduler object
      * @IOException error writing file
      */
@@ -79,20 +120,21 @@ public class LocationHandler {
             System.out.println("Export " + numOfLocation + " of " + (numOfLocation > 1 ? "locations." : "location."));
             fileWriter.close();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error writing file.");
         }
     }
 
     /**
      * list all available locations in alphabetical order
-     * @param args array of user input arguments
+     * @cmd LOCATIONS
+     * @param args array of user input arguments to list all location
      * @param flightScheduler flight scheduler object
      */
     public static void handleListAllLocations(String[] args, FlightScheduler flightScheduler) {
         try {
             if (args.length > 1) throw new IllegalArgumentException(SystemMessage.GENERAL_INVALID_MSG);
             if (flightScheduler.getLocationList().size() == 0) {
-                System.out.println("No locations are available");
+                System.out.println("(None)");
                 return;
             }
 
@@ -110,6 +152,7 @@ public class LocationHandler {
 
     /**
      * view details about a location (it’s name, coordinates, demand coefficient)
+     * @cmd LOCATION <name>
      * @param name location name input
      * @param flightScheduler flight scheduler object
      */

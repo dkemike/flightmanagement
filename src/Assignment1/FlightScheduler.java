@@ -67,6 +67,9 @@ public class FlightScheduler {
                     break;
                 }
                 switch (args[1].toUpperCase()) {
+                    case UserCommand.ADD:
+                        FlightHandler.handleAddFlight(args, this, true);
+                        break;
                     case UserCommand.IMPORT: // FLIGHT IMPORT <filename>
                         FlightHandler.handleFlightImport(args, this);
                         break;
@@ -75,7 +78,7 @@ public class FlightScheduler {
                         break;
                     default: // FLIGHT <id> ...
                         //check whether flight id is valid
-                        if (!args[1].matches("-?\\d+(\\.\\d+)?") || !flightMap.containsKey(Integer.valueOf(args[1]))) {
+                        if (!Utility.isNumeric(args[1]) || !flightMap.containsKey(Integer.valueOf(args[1]))) {
                             System.out.println("Invalid Flight ID");
                             break;
                         }
@@ -95,6 +98,9 @@ public class FlightScheduler {
                     break;
                 }
                 switch (args[1].toUpperCase()) {
+                    case UserCommand.ADD: // LOCATION ADD <name> <lat> <long> <demand_coefficient>
+                        LocationHandler.handleAddLocation(args, this, true);
+                        break;
                     case UserCommand.IMPORT: // LOCATION IMPORT <filename>
                         LocationHandler.handleLocationImport(args, this);
                         break;

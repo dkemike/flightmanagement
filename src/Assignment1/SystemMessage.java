@@ -21,5 +21,8 @@ public class SystemMessage {
         public static final String GENERAL_INVALID_MSG = "Invalid command. Type 'help' for a list of commands.";
         public static final String EXIT_SYSTEM_MSG = "Application closed.";
         public static final String FLIGHT_CMD_USAGE = "Usage:\nFLIGHT <id> [BOOK/REMOVE/RESET] [num]\nFLIGHT ADD <departure time> <from> <to> <capacity>\nFLIGHT IMPORT/EXPORT <filename>";
+        public static final String FLIGHT_ADD_CMD_USAGE = "Usage: FLIGHT ADD <departure time> <from> <to> <capacity>\nExample: FLIGHT ADD Monday 18:00 Sydney Melbourne 120";
         public static final String LOCATION_CMD_USAGE = "Usage:\nLOCATION <name>\nLOCATION ADD <name> <latitude> <longitude> <demand_coefficient>\nLOCATION IMPORT/EXPORT <filename>";
+        public static final String LOCATION_ADD_CMD_USAGE = "Usage: LOCATION ADD <name> <lat> <long> <demand_coefficient>\nExample: LOCATION ADD Sydney -33.847927 150.651786 0.2";
+
 }

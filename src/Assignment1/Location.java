@@ -3,13 +3,13 @@ package Assignment1;
 import java.util.List;
 
 public class Location {
-    String name;
-    String uppercaseName;
-    double latitude;
-    double longitude;
-    double demandCoefficient;
-    List<Flight> arriveFlights;
-    List<Flight> departFlights;
+    private String name;
+    private String uppercaseName;
+    private double latitude;
+    private double longitude;
+    private double demandCoefficient;
+    private List<Flight> arriveFlights;
+    private List<Flight> departFlights;
 
 
     public Location(String name, double latitude, double longitude, double demandCoefficient) {
